@@ -24,10 +24,15 @@ Installation Instructions:
 10. Have Fun!
 
 Game Controls:
+
 Move Selector: Arrow Keys (directional keys by the numpad)
+
 Fill/Empty a Selected Cell: Spacebar
+
 Set Start Cell: S key
+
 Set Finish Cell: F key
+
 Draw Shortest Path: E key
 
 The release folder contains all of the latest compiled VM's of the project.

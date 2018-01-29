@@ -2,7 +2,9 @@
 Capstone Project for the Nand2Tetris Online course: www.nand2tetris.org
 
 Game: Pathing Simulator
+
 Goal: Create a tool that can visualize pathing algorithms on an emulated "built-from-scratch" 16-bit machine.
+
 Video demonstration: Pathing_simulator/presentation/pathing_sim.mp4
 
 Packages Required to run: 

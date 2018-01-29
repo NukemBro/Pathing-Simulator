@@ -1,0 +1,72 @@
+class Grid {
+
+	field CellArray grid;
+	field CellArray A0; field CellArray A1; 
+	field CellArray A2; field CellArray A3;
+	field CellArray A4; field CellArray A5; 
+	field CellArray A6; field CellArray A7;
+	field int xsize;
+	field int ysize;
+	field int csize;
+
+    /** Constructs the Grid */
+	// creates 512 x 256 grid
+    constructor Grid new(int Axsize, int Aysize, int Acsize) {
+		let xsize = Axsize;
+		let ysize = Aysize;
+		let csize = Acsize;
+		let A0 = CellArray.new(xsize / csize); let A1 = CellArray.new(xsize / csize);
+		let A2 = CellArray.new(xsize / csize); let A3 = CellArray.new(xsize / csize);
+		let A4 = CellArray.new(xsize / csize); let A5 = CellArray.new(xsize / csize);
+		let A6 = CellArray.new(xsize / csize); let A7 = CellArray.new(xsize / csize);
+        do show();
+        return this;
+    }
+	
+	/** Getters */
+	method int getXsize() { return xsize / csize; }
+	method int getYsize() { return ysize / csize; }
+	
+
+    /** Deallocates the object's memory. */
+    method void dispose() { do Memory.deAlloc(this); return; }
+
+    /** Shows the Grid. */
+    method void show() { do Screen.setColor(true); do draw(); return; }
+
+    /** Hides the Grid. */
+    method void hide() { do Screen.setColor(false); do draw(); return; }
+	
+	/** Returns Cell object in Grid. */
+	method Cell at(int xIndex, int yIndex) {
+		var Cell current;
+		var CellArray ygrid;
+		let ygrid = grid[yIndex-1];
+		let current = ygrid[xIndex];
+		return current;
+	}
+	
+	/** draws a grid of cells. */
+	// fix matrix draw logic
+	method void draw() {
+		var int i;
+		let i = 0;
+		while (i < (xsize / csize)) {
+			let A0[i] = Cell.new(i * csize, 0, csize - 1);
+			let A1[i] = Cell.new(i * csize, 32, csize - 1);
+			let A2[i] = Cell.new(i * csize, 64, csize - 1);
+			let A3[i] = Cell.new(i * csize, 96, csize - 1);
+			let A4[i] = Cell.new(i * csize, 128, csize - 1);
+			let A5[i] = Cell.new(i * csize, 160, csize - 1);
+			let A6[i] = Cell.new(i * csize, 192, csize - 1);
+			let A7[i] = Cell.new(i * csize, 224, csize - 1);
+			let i = i + 1;
+		}
+		let grid = CellArray.new((ysize / csize));
+		let grid[0] = A0; let grid[1] = A1;
+		let grid[2] = A2; let grid[3] = A3;
+		let grid[4] = A4; let grid[5] = A5;
+		let grid[6] = A6; let grid[7] = A7;
+		return;
+	}
+}

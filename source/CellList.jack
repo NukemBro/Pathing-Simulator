@@ -1,0 +1,142 @@
+class CellList {
+    field Cell data;			// a CellList consists of cell,
+    field CellList next;		// followed by a CellList
+
+    /* Creates a CellList. */
+    constructor CellList new(Cell Adata, CellList Anext) {
+        let data = Adata;
+        let next = Anext;
+        return this;
+    }
+
+    /** Accessors. */
+    method Cell getData() { return data; }
+    method CellList getNext() { return next; }
+	
+	/** Accessors. */
+    method void setData(Cell c) { let data = c; return; }
+    method void setNext(CellList cl) { let next = cl; return; }
+
+    /** Prints this CellList. */
+    method void print() {
+        var CellList current;
+		var Cell c;
+        let current = this;
+		if (isEmpty()) {
+			do Output.printString("List is Empty, Cannot Print");
+			do Output.println();
+		} else {
+			while (~(current = null)) {
+				let c = current.getData();
+				do Output.printString("Cell Pos(");
+				do Output.printInt(c.getX());
+				do Output.printString(", ");
+				do Output.printInt(c.getY());
+				do Output.printString(")");
+				do Output.println();
+				let current = current.getNext();
+			}
+			do Output.println();
+		}
+        return;
+    }
+
+    /** Disposes this CellList by recursively disposing its tail. */
+    method void dispose() {
+        if (~(next = null)) {
+            do next.dispose();
+        }
+        // Uses an OS routine to recycle this object.
+        do Memory.deAlloc(this);
+        return;
+    }
+
+    /** Checks if CellList is empty */
+	method boolean isEmpty() { 
+		if (getData() = null) { 
+			return true; 
+		} else { 
+			return false; 
+		} 
+	}
+	
+	/** returns first object in CellList without dequeuing*/
+	method Cell getFront() { 
+		return getData();
+	}
+	
+	/** pop (remove last) operation on CellList*/
+	// if list not empty, remove last list
+	// if list is empty, return empty list message
+	method cell pop() {
+		var CellList current, prevList;
+		var Cell last, temp;
+        let current = this;
+		if (~(isEmpty())) {	
+			if (current.getNext() = null) {				// only 1 list in cellList case (first=last)
+				let last = current.getData();			// get last/first list in CellList
+				do current.setData(null);				// first list data = null
+				do current.setNext(null);				// first list next = null
+				return last;							// return last/first list in CellList
+			} else {
+				while (~(current.getNext() = null)) {	// multiple lists in cellList case
+					let prevList = current;
+					let current = current.getNext();
+					let temp = current.getData();
+				}
+				let last = current.getData();
+				do prevList.setNext(null);
+				do current.setData(null);
+				return last;
+			}
+		} else {										// CellList is empty case
+			do Output.printString("List is Empty, Cannot Pop!");
+			do Output.println();
+			return null;
+		}
+	}
+	
+	
+	/** enqueue (or push) operation on CellList*/
+	// if list not empty, insert to back
+	// if list is empty, head = c
+	method void enqueue(Cell c) {
+		var CellList current;
+        let current = this;									// current = first list in CellList
+		if (~(isEmpty())) {									// while CellList is not empty
+			while (~(current.getNext() = null)) {			// while next list != null	
+				let current = current.getNext();			// update current till we get
+			}												// last list in CellList
+			do current.setNext(CellList.new(c, null));		// insert c at end of CellList
+		} else {
+			do setData(c);
+			do setNext(null);
+		}
+		return;
+	}
+	
+	/** returns first object in CellList and removes it from list*/
+	// here we essentially replace the first list's data/next with second list's data/next
+	method cell dequeue() {
+		var CellList current, nextList;
+		var Cell first;
+        let current = this;							// sets current to first list in CellList
+		if (isEmpty()) {
+			do Output.printString("List is Empty, Cannot Dequeue!");
+			do Output.println();
+			return null;
+		} else {
+			let first = current.getData();				// get first cell in list
+			if (current.getNext() = null) {				// if one list is left in CellList
+				do current.setData(null);				// first list data = null
+				do current.setNext(null);				// first list next = null
+			} else {
+				let nextList = current.getNext();			// get second list in CellList
+				do current.setData(nextList.getData());		// first list data = second list data
+				do current.setNext(nextList.getNext());		// first list next = second list
+			}
+			return first;
+		}
+	}
+	
+}

@@ -1,0 +1,299 @@
+class Game {
+
+    static Game instance; 
+	field Grid grid;
+	field boolean exit;
+
+    /** Constructs a new Game. */
+    constructor Game new() {
+		var char key;
+		var boolean exitScreen;
+		let exitScreen = false;
+		
+		/** Initial splash screen. */
+	    do Screen.clearScreen();
+		do Output.printString("Game: Pathing Simulator v1.0"); do Output.println();
+		do Output.printString("Team: Assembly Required"); do Output.println();
+		do Output.printString("Members: Grant Hruzek (solo project)"); do Output.println();
+		do Output.printString("Goal: Create a tool that can visualize pathing algorithms"); do Output.println();
+		do Output.println();
+		do Output.printString("Instructions:"); do Output.println();
+		do Output.printString("Move Selector: Arrow Keys"); do Output.println();
+		do Output.printString("Fill/Empty a Selected Cell: Spacebar"); do Output.println();
+		do Output.printString("Set Start Cell: S key"); do Output.println();
+		do Output.printString("Set Finish Cell: F key"); do Output.println();
+		do Output.printString("Draw Shortest Path: E key"); do Output.println();
+		do Output.println();
+		do Output.printString("Have Fun!");
+		do Output.println(); do Output.println();
+		do Output.printString("Press any key to start the program");
+		/** Initial splash screen. */
+		
+		// press any key to continue logic
+		while (~exitScreen) {
+			while ((key = 0) & (~exitScreen)) {
+				let key = Keyboard.keyPressed();
+				do Sys.wait(10);
+			}
+		
+			if (~(key = 0)) {
+				do Screen.clearScreen();
+				let exitScreen = true;
+			}
+			
+			while ((~(key = 0)) & (~exit)) {
+				let key = Keyboard.keyPressed();
+				do Sys.wait(10);
+			}
+		}
+		
+		let grid = Grid.new(512, 256, 32);		// (8x16 squared grid)
+		let exit = false;
+        return this;
+    }
+
+    /** Deallocates the object's memory. */
+    method void dispose() { do grid.dispose(); do Memory.deAlloc(this); return; }
+
+    // Creates an instance of Game, and stores it
+    function void newInstance() { let instance = Game.new(); return; }
+    
+    // Returns the single instance of this Game
+    function Game getInstance() { return instance; }
+	
+	// BFS algorithm
+	// here the BFS uses a Queue data structure and checks each nodes' 
+	// north, east, south, and west neighbors
+	method Boolean BFS(Cell s) {
+		var CellList queue;
+		var CellArray adjList;
+		var Cell u, current;
+		var int x, y, i;
+		let adjList = CellArray.new(4);						// set adjList size to 4, one for each direction
+		do s.setParent(null);								// starter cell has no parent, it is root
+		let queue = CellList.new(s, null);					// init queue, set starter cell as first item
+		while (~(queue.isEmpty())) {						// while queue is not empty
+			let i = 0;										// adjList iterator needs to be reset each dequeue
+			let u = queue.dequeue();						// dequeue first item
+			do u.setVisited(true);							// set first item as visited
+			let x = u.getXindex();							// get u's x index
+			let y = u.getYindex() + 1;						// get u's y index
+			if (((x > -1) & (x < 16)) & (((y-1) > 0) & ((y-1) < 9))) { let adjList[0] = grid.at(x, y-1); } else { let adjList[0] = null; }
+			if (((x > -1) & (x < 16)) & (((y+1) > 0) & ((y+1) < 9))) { let adjList[1] = grid.at(x, y+1); } else { let adjList[1] = null; }
+			if ((((x-1) > -1) & ((x-1) < 16)) & ((y > 0) & (y < 9))) { let adjList[2] = grid.at(x-1, y); } else { let adjList[2] = null; }
+			if ((((x+1) > -1) & ((x+1) < 16)) & ((y > 0) & (y < 9))) { let adjList[3] = grid.at(x+1, y); } else { let adjList[3] = null; }
+			while (i < 4) {
+				let current = adjList[i];
+				if (~(current = null)) {
+					if (current.getFinish()) {				// if child node is the finish node, we return, BFS complete
+						do current.setVisited(true);		// set finish node as visited
+						do current.setParent(u);			// set finish node's parent
+						do queue.dispose(); 				// if next child node is finish node
+						return true;						// deallocate queue, return the child node
+					} else {
+						if ((~(current.getFill())) & (~(current.getVisited()))) {
+							do current.setVisited(true);	// if next node is not filled or already visited
+							do current.setParent(u);		// set the next node's parent
+							do queue.enqueue(current);		// and enqueue the next node
+						}
+					}
+				}
+				let i = i + 1;
+			}
+			/** Debug: Adds delay to show BFS step by step. */
+			//do Sys.wait(3000);
+		}
+		do queue.dispose();
+		return false;
+	}
+	
+	// Resets the grid back to selection stage
+	method void resetGrid() {
+		var Cell current;
+		var int x, y;
+		let x = 0; 
+		let y = 0;
+		while (y < grid.getYsize()) {
+			let x = 0; 
+			while (x < grid.getXsize()) {
+				let current = grid.at(x,y+1);
+				do current.setSelected(false);
+				do current.setVisited(false);
+				let x = x + 1;
+			}
+			let y = y + 1;
+		}
+		return;
+	}
+	
+	method void drawPath(Cell finish) {
+		var Cell current, next;
+		let current = finish;
+		let next = current.getParent();
+		while (~(current.getParent() = null)) {
+			//do current.setSelected(true);
+			do Screen.drawLine(current.getXcenter(), current.getYcenter(), next.getXcenter(), next.getYcenter());
+			let current = current.getParent();
+			if (~(current.getParent() = null)) {
+				let next = current.getParent();
+			}
+		}
+		return;
+	}
+
+    //Starts the Game, and handles inputs from the user that control
+    method void run() {
+		var char key;
+		var CellArray ygrid;
+		var int xcurr, ycurr;
+		var Cell current, start, finish, prevStart, prevFinish, temp;
+		var CellList v;
+		var boolean selectStage, executionStage;
+		
+		let selectStage = true;					// initially set selectStage as true
+		let executionStage = false;				// initially set executionStage as false
+		let xcurr = 7;							// x position for initial selector cell
+		let ycurr = 3;							// y position for initial selector cell
+		
+		/** Initializing default Start Cell at (1,4)*/
+		let current = grid.at(1,4);
+		let start = grid.at(1,4);
+		let prevStart = start;
+		do current.setStart(true);
+		
+		/** Initializing default Finish Cell at (14,4)*/
+		let current = grid.at(14,4);
+		let finish = grid.at(14,4);
+		let prevFinish = finish;
+		do current.setFinish(true);
+		
+		/** Initial Selector Cell at (7,3) */
+		let current = grid.at(xcurr,ycurr);
+		do current.setSelected(true);
+		
+		while(~exit) {
+				
+			while ((key = 0) & (~exit)) {
+				let key = Keyboard.keyPressed();
+				do Sys.wait(10);
+			}
+			
+			/** Debug: KeyID */
+			//do Output.moveCursor(22,0);
+			//do Output.printInt(key);
+			/** Debug: KeyID*/
+			
+			if (selectStage) {
+			
+				/** Fill/Empty Selected Cell */
+				if (key = 32) {
+					if (current.getFill()) {
+						do current.setFill(false);
+					} else {
+						if (~(current.getFill()) & (~(current.getStart())) & (~(current.getFinish()))) {
+							do current.setFill(true);
+						}
+					}
+				}
+				
+				/** Set a new Finish Cell */
+				// Note that there can only be one start/finish cell, so we must keep track of the
+				// previous start/finish cell so that we can override the previous start/finish cell
+				if (key = 70) {
+					if (~(current.getFill()) & (~(current.getStart())) & (~(current.getFinish()))) {
+						do prevFinish.setFinish(false);
+						do current.setFinish(true);
+						let finish = current;
+						let prevFinish = current;
+					}
+				}
+				
+				/** Set a new Start Cell */
+				// Note that there can only be one start/finish cell, so we must keep track of the
+				// previous start/finish cell so that we can override the previous start/finish cell
+				if (key = 83) {
+					if (~(current.getFill()) & (~(current.getStart())) & (~(current.getFinish()))) {
+						do prevStart.setStart(false);
+						do current.setStart(true);
+						let start = current;
+						let prevStart = current;
+					}
+				}
+				
+				/** Selector move left */
+				if ((key = 130) & (xcurr > 0)) {
+					do current.setSelected(false);
+					let xcurr = xcurr - 1;
+					let current = grid.at(xcurr,ycurr);
+					do current.setSelected(true);
+				}
+				
+				/** Selector move up */
+				if ((key = 131) & (ycurr > 1)) {
+					do current.setSelected(false);
+					let ycurr = ycurr - 1;
+					let current = grid.at(xcurr,ycurr);
+					do current.setSelected(true);
+				}
+				
+				/** Selector move right */
+				if ((key = 132) & (xcurr < 15)) {
+					do current.setSelected(false);
+					let xcurr = xcurr + 1;
+					let current = grid.at(xcurr,ycurr);
+					do current.setSelected(true);
+				}
+				
+				/** Selector move down */
+				if ((key = 133) & (ycurr < 8)) {
+					do current.setSelected(false);
+					let ycurr = ycurr + 1;
+					let current = grid.at(xcurr,ycurr);
+					do current.setSelected(true);
+				}
+				
+				/** Go from selectionStage to executionStage */
+				if (key = 69) {
+					let selectStage = false;				// set selectionStage to false so we can no longer alter grid
+					do current.setSelected(false);			// set current selected cell to false
+					let executionStage = true;				// start executionStage
+				}
+				
+				/** Debug: Selector Cell Position */
+				//do Output.moveCursor(22,0);
+				//do Output.printString("Cell Pos(");
+				//do Output.printInt(xcurr);
+				//do Output.printString(", ");
+				//do Output.printInt(ycurr);
+				//do Output.printString(", ");
+				//do Output.printInt(current.getFill());
+				//do Output.printString(")");
+				/** Debug: Selector Cell Position */
+			
+			}
+			
+			/** Enter Execution Stage */
+			if (executionStage) {
+				if (BFS(start)) { 
+					do resetGrid();
+					do drawPath(finish);
+					do Output.moveCursor(22,0);
+					do Output.printString("Path Drawn!");
+					let exit = true;
+				} else {
+					do Output.moveCursor(22,0);
+					do Output.printString("A path is not possible, try again!");
+					let exit = true;
+				}	
+			}
+				
+			// Waits for the key to be released.
+			while ((~(key = 0)) & (~exit)) {
+				let key = Keyboard.keyPressed();
+				do Sys.wait(10);
+			}
+
+		}
+		return;
+    }
+}

@@ -1,0 +1,22 @@
+class CellArray {
+
+	field Cell cell;
+	field int size;
+	
+    /** Constructs a new CellArray of given size */
+    function CellArray new(int size) {
+        return Memory.alloc(size);
+    }
+	
+	/** Returns size of Array. */
+	method int getSize() {
+		return size;
+	}
+
+    /** De-allocates the CellArray and frees its space. */
+    method void dispose() {
+        do Memory.deAlloc(this);
+        return;
+    }
+	
+}
